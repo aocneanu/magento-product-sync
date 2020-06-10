@@ -31,5 +31,5 @@
     "psr-4": {
       "LaravelEnso\\MagentoProductSync\\": "src/"
     }
-  },
+  }
 }
