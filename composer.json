@@ -1,0 +1,35 @@
+{
+  "name": "laravel-enso/magento-product-sync",
+  "description": "A package for importing product from api",
+  "homepage": "https://github.com/laravel-enso/magento-product-sync/",
+  "keywords": [
+    "laravel-enso",
+    "magento"
+  ],
+  "version": "0.1.0",
+  "type": "metapackage",
+  "license": "MIT",
+  "require": {
+    "php": "7.3.*",
+    "magento/framework": "^102"
+  },
+  "authors": [
+    {
+      "name": "Adrian Ocneanu",
+      "email": "aocneanu@gmail.com",
+      "homepage": "https://laravel-enso.com",
+      "role": "Developer"
+    },
+    {
+      "name": "Reza Fouladi",
+      "email": "raftx24@gmail.com",
+      "homepage": "https://laravel-enso.com",
+      "role": "Developer"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "LaravelEnso\\MagentoProductSync\\": "src/"
+    }
+  },
+}
