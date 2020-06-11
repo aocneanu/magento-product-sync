@@ -31,7 +31,7 @@ class Cache
     {
         $cache = $this->getCache();
 
-        $cache[''.$product->CodProdus] = md5(json_encode($product));
+        $cache[''.$product['sku']] = md5(json_encode($product));
 
         file_put_contents($this->path(), json_encode($cache));
     }
@@ -40,14 +40,14 @@ class Cache
     {
         $cache = $this->getCache();
 
-        unset($cache[''.$product->CodProdus]);
+        unset($cache[$product['sku']]);
 
         file_put_contents($this->path(), json_encode($cache));
     }
 
     public function isImported($product)
     {
-        $checksum = $this->getCache()[$product->CodProdus] ?? null;
+        $checksum = $this->getCache()[$product['sku']] ?? null;
 
         return md5(json_encode($product)) === $checksum;
     }

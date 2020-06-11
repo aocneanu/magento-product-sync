@@ -6,6 +6,7 @@ use LaravelEnso\MagentoProductSync\Helper\Cache;
 
 class Api // TODO :: REMOVE CACHE RESPONSIBLITY FROM THIS!
 {
+    private $content;
     private $products;
     private $cache;
 
@@ -15,8 +16,9 @@ class Api // TODO :: REMOVE CACHE RESPONSIBLITY FROM THIS!
 
     public function __construct()
     {
-        $this->fetch();
         $this->cache = (new Cache())->getCache();
+        $this->fetch()->convert();
+        $this->cache = []; //TODO::REMOVE IT!
     }
 
     public function created()
@@ -43,15 +45,26 @@ class Api // TODO :: REMOVE CACHE RESPONSIBLITY FROM THIS!
     public function removed()
     {
         if (! $this->removed) {
-            $this->removed = array_diff_assoc($this->cache, $this->products);
+            $removed = array_diff_key($this->cache, $this->products);
+            $this->removed = [];
+            foreach ($removed as $sku => $checksum) {
+                $this->removed[$sku] = ['sku' => $sku]; //TODO:: BAD LOGIC!
+            }
         }
 
         return $this->removed;
     }
 
+    public function count()
+    {
+        return count($this->removed())
+            + count($this->created())
+            + count($this->updated());
+    }
+
     public function synced($product)
     {
-        if ($this->created[$this->key($product)] || $this->updated[$this->key($product)]) {
+        if (isset($this->created[$this->key($product)]) || isset($this->updated[$this->key($product)])) {
            (new Cache())->updated($product);
 
            return;
@@ -60,15 +73,22 @@ class Api // TODO :: REMOVE CACHE RESPONSIBLITY FROM THIS!
         (new Cache())->deleted($product);
     }
 
+    public function keys()
+    {
+        return array_map(function ($product) {
+            return $this->key($product);
+        }, $this->products + $this->removed());
+    }
+
     private function fetch()
     {
-        $content = '<produse>
+        $this->content = '<produse>
   <produs id="6174">
-    <CodProdus>BL4007173456122521362</CodProdus>
-    <Producator>Bullyl2a345n42d</Producator>
-    <NumeProdus>101 Da2456456lma5tieni Dipstick111111112</NumeProdus>
+    <CodProdus>BL400717345613212521231362</CodProdus>
+    <Producator>Bullyl2a345n4211232d</Producator>
+    <NumeProdus>101 Da2452346456lma5ti432eni Dipstick111111112</NumeProdus>
     <URL>https://www.magicashop.ro/101_Dalmatieni_Dipstick</URL>
-    <NumeCategorie>Figurine&gt;Figurine Disney&gt;101 dalmatieni</NumeCategorie>
+    <NumeCategorie>F324iguri1ne&gt;Figurine D223isney&gt;101 123d3almatieni</NumeCategorie>
     <PretEndUser>2220.43</PretEndUser>
     <Stoc>24</Stoc>
     <DescriereScurta>Catelul Dipstick din "101 Dalmatieni"</DescriereScurta>
@@ -84,11 +104,11 @@ class Api // TODO :: REMOVE CACHE RESPONSIBLITY FROM THIS!
     <data>08.06.2020 17:21</data>
   </produs>
   <produs id="6175">
-    <CodProdus>BL40071761123252291</CodProdus>
-    <Producator>Bull1232yland</Producator>
-    <NumeProdus>101123 2Dalmatieni Lucky3</NumeProdus>
+    <CodProdus>BL4007qwe231234761123252291</CodProdus>
+    <Producator>Bu123lqwel2341212332yland</Producator>
+    <NumeProdus>10112qwe142343423 2Dalmat11ieni Lucky3</NumeProdus>
     <URL>https://www.magicashop.ro/101_Dalmatieni_Lucky</URL>
-    <NumeCategorie>F111111ig1ur213ine&gt;Figuri1ne1222123 Disney&gt;101 d1a22222222lma4tieni</NumeCategorie>
+    <NumeCategorie>F111111ig4351ur213ine&gt;Figuri1ne1222123 Disney&gt;101 d1a22222222lma4tieni</NumeCategorie>
     <PretEndUser>19.97</PretEndUser>
     <Stoc>96</Stoc>
     <DescriereScurta>Catelul Lucky din "101 Dalmatieni"</DescriereScurta>
@@ -106,27 +126,51 @@ class Api // TODO :: REMOVE CACHE RESPONSIBLITY FROM THIS!
   </produse>';
 
 //        $content = file_get_contents('https://gest.magicashop.ro/Feeds/feedCompletProduse.xml');
-//        $content = file_get_contents('http://localhost/tmp/feedCompletProduse.xml');
+        $this->content = file_get_contents('http://localhost/tmp/feedCompletProduse.xml');
 
-        $xml = simplexml_load_string($content);
+        return $this;
+    }
 
-        $array = json_decode(json_encode($xml));
+    private function convert()
+    {
+        $xml = simplexml_load_string($this->content);
 
+        $array = json_decode(json_encode($xml), true);
 
         $this->products = [];
 
-        foreach ($array->produs as $product) {
+        $result= array_splice($array['produs'], 200, 10);
+        foreach ($result as $product) {
+            $product = $this->toEnglish($product);
             $this->products[$this->key($product)] = $product;
         }
+
+        return $this->products;
     }
 
     private function key($product)
     {
-        return $product->CodProdus;
+        return $product['sku'];
     }
 
     private function checksum($product)
     {
         return md5(json_encode($product));
+    }
+
+    private function toEnglish($product)
+    {
+        return [
+            'sku' => $product['CodProdus'],
+            'manufacture' => $product['Producator'],
+            'name' => $product['NumeProdus'],
+            'url' => $product['URL'],
+            'category' => $product['NumeCategorie'],
+            'price' => $product['PretEndUser'],
+            'stock' => $product['Stoc'],
+            'short_description' => $product['DescriereScurta'],
+            'description' => $product['Descriere'],
+            'image' => $product['URL_poza'],
+        ];
     }
 }

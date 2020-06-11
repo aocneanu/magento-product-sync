@@ -4,24 +4,17 @@ namespace LaravelEnso\MagentoProductSync\Model\Directors;
 
 use Magento\Framework\App\ObjectManager;
 use Magento\Store\Model\StoreManagerInterface;
-use LaravelEnso\MagentoProductSync\Helper\Finders\Category as Finder;
+use LaravelEnso\MagentoProductSync\Repositories\Finders\Category as Finder;
 
 class Category
 {
     private $finder;
-
-    protected $_productFactory;
-    protected $_categoryFactory;
-    protected $_objectManager;
-    protected $_storeManager;
     protected $_store;
 
     public function __construct()
     {
         $this->finder = new Finder();
-        $this->_objectManager = ObjectManager::getInstance();
-        $this->_storeManager = $this->_objectManager->create(StoreManagerInterface::class);
-        $this->_store = $this->_storeManager->getStore();
+        $this->initStore();
     }
 
     public function createCategory($cats, $root = null)
@@ -53,5 +46,13 @@ class Category
     private function storeId()
     {
         return $this->_store->getStoreId();
+    }
+
+    private function initStore(): void
+    {
+        $storeManager = ObjectManager::getInstance()
+            ->create(StoreManagerInterface::class);
+
+        $this->_store = $storeManager->getStore();
     }
 }

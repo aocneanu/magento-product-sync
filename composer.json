@@ -6,8 +6,8 @@
     "laravel-enso",
     "magento"
   ],
-  "version": "0.1.0",
-  "type": "metapackage",
+  "version": "1.0.0",
+  "type": "magento2-module",
   "license": "MIT",
   "require": {
     "php": "7.3.*",
@@ -29,7 +29,10 @@
   ],
   "autoload": {
     "psr-4": {
-      "LaravelEnso\\MagentoProductSync\\": "src/"
-    }
+      "LaravelEnso\\MagentoProductSync\\": ""
+    },
+    "files": [
+      "registration.php"
+    ]
   }
 }
