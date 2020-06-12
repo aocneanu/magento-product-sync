@@ -35,7 +35,8 @@ class Api // TODO :: REMOVE CACHE RESPONSIBILITY FROM THIS!
     {
         if (! $this->updated) {
             $this->updated = array_filter($this->products, function ($product) {
-                return $this->checksum($product) !== $this->cache->get($this->key($product));
+                return $this->cache->get($this->key($product)) !== null
+                    && $this->checksum($product) !== $this->cache->get($this->key($product));
             });
         }
 
@@ -74,9 +75,11 @@ class Api // TODO :: REMOVE CACHE RESPONSIBILITY FROM THIS!
 
     public function keys()
     {
-        return array_map(function ($product) {
+        $result =  array_map(function ($product) {
             return $this->key($product);
         }, $this->products + $this->removed());
+
+        return array_values($result);
     }
 
     private function fetch()

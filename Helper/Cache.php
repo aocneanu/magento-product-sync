@@ -2,19 +2,18 @@
 
 namespace LaravelEnso\MagentoProductSync\Helper;
 
-use Magento\Framework\App\Filesystem\DirectoryList;
+use LaravelEnso\MagentoProductSync\Model\Cache\Type;
 use Magento\Framework\App\ObjectManager;
-use Magento\Framework\Filesystem;
 
 class Cache
 {
-    private $_fileSystem;
+    private $_cacheType;
     private $data;
 
     public function __construct()
     {
-        $this->_fileSystem = ObjectManager::getInstance()
-            ->create(Filesystem::class);
+        $this->_cacheType = ObjectManager::getInstance()
+            ->create(Type::class);
 
         $this->load();
     }
@@ -45,23 +44,14 @@ class Cache
 
     private function load()
     {
-        if (file_exists($this->path())) {
-            $this->data = json_decode(file_get_contents($this->path()), true) ?? [];
+        $result = $this->_cacheType
+            ->load(Type::IMPORT_CACHE_KEY);
 
-            return;
-        }
-
-        $this->data = [];
-    }
-
-    private function path()
-    {
-        return $this->_fileSystem->getDirectoryRead(DirectoryList::CACHE)
-            ->getAbsolutePath("import.json");
+        $this->data = json_decode($result, true) ?? [];
     }
 
     private function save()
     {
-        file_put_contents($this->path(), json_encode($this->data));
+        $this->_cacheType->save(json_encode($this->data), Type::IMPORT_CACHE_KEY);
     }
 }

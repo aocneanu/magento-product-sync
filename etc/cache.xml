@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Cache/etc/cache.xsd">
+    <type name="api_cache" translate="label,description" instance="LaravelEnso\MagentoProductSync\Model\Cache\Type">
+        <label>LaravelEnso Product Sync</label>
+        <description>LaravelEnso Product Sync</description>
+    </type>
+</config>
