@@ -15,6 +15,7 @@ class Product
 
     private $external;
     private $instance;
+    private $category;
 
     public function __construct($external, $instance)
     {
@@ -32,15 +33,15 @@ class Product
             ->description()
             ->shortDescription()
             ->manufacturer()
-            ->url()
             ->enable()
-            ->setCategories()
-            ->addsImage();
+            ->categories()
+            ->url()
+            ->image();
 
         return $this->instance;
     }
 
-    private function addsImage()
+    private function image()
     {
         (new Image($this->instance, $this->external['image']))
             ->addImagesToProduct();
@@ -54,13 +55,13 @@ class Product
         return sprintf('%0.6f', $this->external['price']);
     }
 
-    private function setCategories()
+    private function categories()
     {
-        $category = (new Category($this->external['category']))
+        $this->category = (new Category($this->external['category']))
             ->createCategories();
 
-        if (! in_array($category->getId(), $this->instance->getCategoryIds())) {
-            $this->instance->setCategoryIds([$category->getId()]);
+        if (! in_array($this->category->getId(), $this->instance->getCategoryIds())) {
+            $this->instance->setCategoryIds([$this->category->getId()]);
         }
 
         return $this;
@@ -108,7 +109,14 @@ class Product
     private function url()
     {
         $path = parse_url($this->external['url'])['path'];
-        $this->instance->setUrlKey(ltrim($path, '/'));
+        $path = strtolower(ltrim($path, '/'));
+        $categoryPath = str_replace(' ', '-', strtolower($this->category->getName()));
+
+        if($path === $categoryPath) {
+            $path = 'product-' . $path;
+        }
+
+        $this->instance->setUrlKey($path);
 
         return $this;
     }
