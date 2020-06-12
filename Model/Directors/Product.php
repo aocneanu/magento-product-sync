@@ -2,8 +2,10 @@
 
 namespace LaravelEnso\MagentoProductSync\Model\Directors;
 
+use LaravelEnso\MagentoProductSync\Repositories\ManufacturerRepository;
 use Magento\Catalog\Model\Product as Model;
 use Magento\Framework\App\ObjectManager;
+use function GuzzleHttp\Psr7\str;
 
 class Product
 {
@@ -17,17 +19,19 @@ class Product
     public function __construct($external, $instance)
     {
         $this->external = $external;
-        $this->instance = $instance
-            ?? ObjectManager::getInstance()->create(Model::class);
+        $this->instance = $instance;
     }
 
     public function make()
     {
         $this->init()
-            ->setPrice()
+            ->price()
             ->enableForSearchAndCatalog()
-            ->setQuantity()
-            ->setDefaultAttributeSet()
+            ->qunatity()
+            ->defaultAttributeSet()
+            ->description()
+            ->shortDescription()
+            ->manufacturer()
             ->url()
             ->enable()
             ->setCategories()
@@ -62,7 +66,7 @@ class Product
         return $this;
     }
 
-    private function setPrice()
+    private function price()
     {
         $this->instance->setPrice($this->formatPrice());
 
@@ -76,7 +80,7 @@ class Product
         return $this;
     }
 
-    private function setQuantity()
+    private function qunatity()
     {
         $this->instance ->setQuantityAndStockStatus([
             'is_in_stock' => '1',
@@ -86,7 +90,7 @@ class Product
         return $this;
     }
 
-    private function setDefaultAttributeSet()
+    private function defaultAttributeSet()
     {
         $this->instance->setAttributeSetId(self::DefaultAttributeID);
 
@@ -113,17 +117,38 @@ class Product
     {
         $this->instance->setSku($this->external['sku'])
             ->setName($this->external['name'])
-            ->setUrlKey(ltrim(parse_url($this->external['url'])['path'], '/'))
             ->setTypeId('simple')
-            ->setDescription($this->string($this->external['description']))
-            ->setShortDescription($this->string($this->external['short_description']))
-            ->setManufactur($this->external['manufacture']);
+            ->setWebsiteIds([1]);
 
         return $this;
     }
 
-    private function string($str)
+    private function shortDescription()
     {
-        return is_string($str) ? $str : '';
+        if (is_string($this->external['short_description'])) {
+            $this->instance->setShortDescription($this->external['short_description']);
+        }
+
+        return $this;
+    }
+
+
+    private function manufacturer()
+    {
+        $manufacturerId = ManufacturerRepository::getInstance()
+            ->getOrCreate($this->external['manufacturer']);
+
+        $this->instance->setManufacturer($manufacturerId);
+
+        return $this;
+    }
+
+    private function description()
+    {
+        if (is_string($this->external['description'])) {
+            $this->instance->setDescription($this->external['description']);
+        }
+
+        return $this;
     }
 }

@@ -4,70 +4,49 @@ namespace LaravelEnso\MagentoProductSync\Service;
 
 use LaravelEnso\MagentoProductSync\Model\Directors\Product as Director;
 use LaravelEnso\MagentoProductSync\Repositories\Finders\Product as Finder;
-use Magento\Catalog\Model\ProductRepository;
+use LaravelEnso\MagentoProductSync\Repositories\ProductRepository;
 use Magento\Framework\App\ObjectManager;
 
 class Sync
 {
     private $api;
-    private $products;
     private $progress;
     private $imported;
+    private $repository;
 
     public function __construct($progress = null)
     {
         $this->api = new Api();
-        $this->initProducts();
         $this->initProgress($progress);
+        $this->repository = ProductRepository::getInstance();
     }
 
     public function handle()
     {
+        $this->repository->loadBySkues($this->api->keys());
+
         foreach ($this->api->updated() + $this->api->created() as $external) {
-            $start = microtime(true);
+            (new Director($external, $this->repository->getOrNew($external['sku'])))
+                ->make()
+                ->save();
 
-            try {
-                $product = (new Director($external, $this->products[$external['sku']] ?? null))
-                    ->make()
-                    ->save();
-            } catch (\Throwable $e) {
-                print_r($external);
-                echo $e;
-                return;
-            }
-
-            $this->api->synced($external);
-
-            $this->progress();
+            $this->done($external);
         }
 
         foreach ($this->api->removed() as $external) {
-
-            $start = microtime(true);
-
-            if(isset($this->products[$external['sku']])) {
-                ObjectManager::getInstance()->create(ProductRepository::class)
-                    ->delete($this->products[$external['sku']]);
-            }
-
-            $this->api->synced($external);
-            $this->progress();
+            $this->repository->delete($external['sku']);
+            $this->done($external);
         }
     }
 
-    protected function progress()
+    protected function done($external)
     {
+        $this->api->synced($external);
         $this->imported++;
 
         if ($this->progress) {
             $this->progress->advance();
         }
-    }
-
-    private function initProducts()
-    {
-        $this->products = (new Finder())
-            ->getWhereInSku($this->api->keys());
     }
 
     private function initProgress($progress = null)

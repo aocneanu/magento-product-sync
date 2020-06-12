@@ -10,17 +10,4 @@ class Product extends Finder
     {
         parent::__construct(Model::class);
     }
-
-    public function getWhereInSku($values)
-    {
-        $collection = $this->getWhereIn('sku', $values);
-
-        $result = [];
-
-        foreach ($collection as $item) {
-            $result[$item->getSku()] = $item;
-        }
-
-        return $result;
-    }
 }

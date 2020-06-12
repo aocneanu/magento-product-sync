@@ -2,7 +2,6 @@
 
 namespace LaravelEnso\MagentoProductSync\Helper;
 
-use Exception;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Filesystem;
@@ -10,51 +9,55 @@ use Magento\Framework\Filesystem;
 class Cache
 {
     private $_fileSystem;
+    private $data;
 
     public function __construct()
     {
         $this->_fileSystem = ObjectManager::getInstance()
             ->create(Filesystem::class);
+
+        $this->load();
     }
 
-    public function getCache() //TODO :: RENAME IT!
+    public function all()
     {
-        try {
-            return json_decode(file_get_contents($this->path()), true) ?? [];
-        } catch (Exception $e) {
+        return $this->data;
+    }
+
+    public function put($key, $value)
+    {
+        $this->data[$key] = $value;
+
+        $this->save();
+    }
+
+    public function get($key)
+    {
+        return $this->data[$key] ?? null;
+    }
+
+    public function delete($key)
+    {
+        unset($this->data[$key]);
+
+        $this->save();
+    }
+
+    private function load()
+    {
+        if (file_exists($this->path())) {
+            $this->data = json_decode(file_get_contents($this->path()), true) ?? [];
         }
-
-        return [];
-    }
-
-    public function updated($product)
-    {
-        $cache = $this->getCache();
-
-        $cache[''.$product['sku']] = md5(json_encode($product));
-
-        file_put_contents($this->path(), json_encode($cache));
-    }
-
-    public function deleted($product)
-    {
-        $cache = $this->getCache();
-
-        unset($cache[$product['sku']]);
-
-        file_put_contents($this->path(), json_encode($cache));
-    }
-
-    public function isImported($product)
-    {
-        $checksum = $this->getCache()[$product['sku']] ?? null;
-
-        return md5(json_encode($product)) === $checksum;
     }
 
     private function path()
     {
         return $this->_fileSystem->getDirectoryRead(DirectoryList::CACHE)
             ->getAbsolutePath("import.json");
+    }
+
+    private function save()
+    {
+        file_put_contents($this->path(), json_encode($this->data));
     }
 }
