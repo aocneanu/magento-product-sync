@@ -56,11 +56,11 @@ class Product
 
     private function setCategories()
     {
-        $categoryDirector = (new Category())
-            ->createCategory(explode('>', $this->external['category']));
+        $category = (new Category($this->external['category']))
+            ->createCategories();
 
-        if (array_diff($categoryDirector, $this->instance->getCategoryIds())) {
-            $this->instance->setCategoryIds($categoryDirector);
+        if (! in_array($category->getId(), $this->instance->getCategoryIds())) {
+            $this->instance->setCategoryIds([$category->getId()]);
         }
 
         return $this;

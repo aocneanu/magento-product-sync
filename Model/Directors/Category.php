@@ -9,38 +9,54 @@ use LaravelEnso\MagentoProductSync\Repositories\Finders\Category as Finder;
 class Category
 {
     private $finder;
-    protected $_store;
+    private $categories;
 
-    public function __construct()
+    private $_store;
+
+    public function __construct($cats)
     {
         $this->finder = new Finder();
         $this->initStore();
+        $this->categories = explode('>', $cats);
     }
 
-    public function createCategory($cats, $root = null)
+    public function createCategories($parent = null)
     {
-        $root = $root ?? $this->finder
-                ->findOrNew($this->_store->getRootCategoryId());
+        $parent = $parent ?? $this->root();
 
-        if ($cats === []) {
-            return [$root->getId()];
+        if (count($this->categories) === 1) {
+            return $this->getOrCreate($parent);
         }
 
-        $name = ucfirst(array_shift($cats));
+        return $this->createCategories($this->getOrCreate($parent));
+    }
 
+    private function getOrCreate($parent)
+    {
+        $name = ucfirst(array_shift($this->categories));
         $category = $this->finder->findOrNew(['name' => $name]);
 
-        if (! $category->getId()) {
-            $category = $category->setName($name)
-                ->setIsActive(true)
-                ->setData('description', $name)
-                ->setParentId($root->getId())
-                ->setStoreId($this->storeId())
-                ->setPath($root->getPath())
-                ->save();
+        if ($category->getId()) {
+            return $category;
         }
 
-        return $this->createCategory($cats, $category);
+        return $category->setName($name)
+            ->setIsActive(true)
+            ->setData('description', $name)
+            ->setParentId($parent->getId())
+            ->setUrlKey($this->urlKey($name))
+            ->setStoreId($this->storeId())
+            ->setPath($parent->getPath())
+            ->save();
+    }
+
+    private function urlKey($name)
+    {
+        $url = strtolower($name);
+        $urlDecode = urldecode(html_entity_decode(strip_tags($url)));
+        $cleanUrl = preg_replace('/ +/', '', preg_replace('/[^A-Za-z0-9 ]/', '', $urlDecode));
+
+        return 'category-' . trim($cleanUrl);
     }
 
     private function storeId()
@@ -54,5 +70,11 @@ class Category
             ->create(StoreManagerInterface::class);
 
         $this->_store = $storeManager->getStore();
+    }
+
+    private function root()
+    {
+        return $this->finder
+            ->findOrNew($this->_store->getRootCategoryId());
     }
 }
