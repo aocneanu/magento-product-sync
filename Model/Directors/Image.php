@@ -6,6 +6,7 @@ namespace LaravelEnso\MagentoProductSync\Model\Directors;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Filesystem;
+use Psr\Log\LoggerInterface;
 use Throwable;
 
 class Image
@@ -31,6 +32,10 @@ class Image
         try {
             $this->download();
         } catch (Throwable $e) {
+            ObjectManager::getInstance()
+                ->get(LoggerInterface::class)
+                ->error('image download failed', ['exception' => $e]);
+
             return;
         }
 
