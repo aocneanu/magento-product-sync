@@ -47,7 +47,11 @@ class Cache
     {
         if (file_exists($this->path())) {
             $this->data = json_decode(file_get_contents($this->path()), true) ?? [];
+
+            return;
         }
+
+        $this->data = [];
     }
 
     private function path()
