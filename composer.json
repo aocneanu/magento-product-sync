@@ -6,7 +6,6 @@
     "laravel-enso",
     "magento"
   ],
-  "version": "1.0.0",
   "type": "magento2-module",
   "license": "MIT",
   "require": {
