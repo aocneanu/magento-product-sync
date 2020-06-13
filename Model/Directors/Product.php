@@ -3,9 +3,6 @@
 namespace LaravelEnso\MagentoProductSync\Model\Directors;
 
 use LaravelEnso\MagentoProductSync\Repositories\ManufacturerRepository;
-use Magento\Catalog\Model\Product as Model;
-use Magento\Framework\App\ObjectManager;
-use function GuzzleHttp\Psr7\str;
 
 class Product
 {
@@ -28,7 +25,7 @@ class Product
         $this->init()
             ->price()
             ->enableForSearchAndCatalog()
-            ->qunatity()
+            ->quantity()
             ->defaultAttributeSet()
             ->description()
             ->shortDescription()
@@ -44,13 +41,10 @@ class Product
     private function image()
     {
         (new Image($this->instance, $this->external['image']))
-            ->addImagesToProduct();
+            ->addImageToProduct();
     }
 
-    /**
-     * @return string
-     */
-    private function formatPrice(): string
+    private function formatPrice()
     {
         return sprintf('%0.6f', $this->external['price']);
     }
@@ -81,7 +75,7 @@ class Product
         return $this;
     }
 
-    private function qunatity()
+    private function quantity()
     {
         $this->instance ->setQuantityAndStockStatus([
             'is_in_stock' => '1',
@@ -139,7 +133,6 @@ class Product
 
         return $this;
     }
-
 
     private function manufacturer()
     {

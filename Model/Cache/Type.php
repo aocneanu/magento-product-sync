@@ -2,8 +2,8 @@
 
 namespace LaravelEnso\MagentoProductSync\Model\Cache;
 
-use Magento\Framework\Cache\Frontend\Decorator\TagScope;
 use Magento\Framework\App\Cache\Type\FrontendPool;
+use Magento\Framework\Cache\Frontend\Decorator\TagScope;
 
 class Type extends TagScope
 {

@@ -2,9 +2,9 @@
 
 namespace LaravelEnso\MagentoProductSync\Model\Directors;
 
+use LaravelEnso\MagentoProductSync\Repositories\Finders\Category as Finder;
 use Magento\Framework\App\ObjectManager;
 use Magento\Store\Model\StoreManagerInterface;
-use LaravelEnso\MagentoProductSync\Repositories\Finders\Category as Finder;
 
 class Category
 {

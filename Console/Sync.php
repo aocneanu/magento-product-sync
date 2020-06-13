@@ -6,9 +6,9 @@ use LaravelEnso\MagentoProductSync\Service\Sync as Service;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\State;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Helper\ProgressBar;
 
 class Sync extends Command
 {

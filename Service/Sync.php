@@ -3,9 +3,7 @@
 namespace LaravelEnso\MagentoProductSync\Service;
 
 use LaravelEnso\MagentoProductSync\Model\Directors\Product as Director;
-use LaravelEnso\MagentoProductSync\Repositories\Finders\Product as Finder;
 use LaravelEnso\MagentoProductSync\Repositories\ProductRepository;
-use Magento\Framework\App\ObjectManager;
 
 class Sync
 {

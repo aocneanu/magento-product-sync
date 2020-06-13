@@ -1,8 +1,8 @@
 <?php
 
-
 namespace LaravelEnso\MagentoProductSync\Model\Directors;
 
+use Magento\Catalog\Model\Product\Gallery\ReadHandler;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Filesystem;
@@ -23,17 +23,18 @@ class Image
             ->create(Filesystem::class);
     }
 
-    public function addImagesToProduct()
+    public function addImageToProduct()
     {
-        if ($this->isExists()) {
+        $this->loadGalleries();
+
+        if ($this->getCurrentImages()[$this->name()] ?? false) {
             return;
         }
 
         try {
             $this->download();
         } catch (Throwable $e) {
-            ObjectManager::getInstance()
-                ->get(LoggerInterface::class)
+            $this->logger()
                 ->error('image download failed', ['exception' => $e]);
 
             return;
@@ -46,14 +47,16 @@ class Image
 
     private function download()
     {
-        file_put_contents($this->path(), file_get_contents($this->url));
+        if ($this->isNotExists()) {
+            file_put_contents($this->path(), file_get_contents($this->url));
+        }
     }
 
     private function name()
     {
         $parts = explode('/', $this->url);
 
-        return $this->product->getSku() . '_' .end($parts);
+        return $this->product->getSku() . '_' . end($parts);
     }
 
     private function path()
@@ -62,8 +65,38 @@ class Image
             ->getAbsolutePath("catalog/product/{$this->name()}");
     }
 
-    private function isExists()
+    private function isNotExists()
     {
-        return file_exists($this->path());
+        return ! file_exists($this->path());
+    }
+
+    private function getCurrentImages()
+    {
+        $images = [];
+
+        foreach ($this->product->getMediaGalleryImages() as $mediaGalleryImage) {
+            $images[$this->originalName($mediaGalleryImage->getFile())] = true;
+        }
+
+        return $images;
+    }
+
+    private function originalName($savedName)
+    {
+        $name = basename($savedName);
+
+        return preg_replace('/(.*)(_\d+)(\.\w+)/', '$1$3', $name);
+    }
+
+    private function loadGalleries()
+    {
+        ObjectManager::getInstance()
+            ->get(ReadHandler::class)->execute($this->product);
+    }
+
+    private function logger()
+    {
+        return ObjectManager::getInstance()
+            ->get(LoggerInterface::class);
     }
 }
