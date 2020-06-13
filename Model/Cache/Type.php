@@ -7,8 +7,8 @@ use Magento\Framework\Cache\Frontend\Decorator\TagScope;
 
 class Type extends TagScope
 {
-    const TYPE_IDENTIFIER = 'api_cache';
-    const CACHE_TAG = 'api_cache';
+    const TYPE_IDENTIFIER = 'enso_api_cache';
+    const CACHE_TAG = 'enso_api_cache';
 
     const IMPORT_CACHE_KEY = 'import';
 
