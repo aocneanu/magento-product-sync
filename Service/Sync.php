@@ -31,9 +31,8 @@ class Sync
                     ->make()
                     ->save();
             } catch (Throwable $e) {
-                ObjectManager::getInstance()
-                    ->get('\Psr\Log\LoggerInterface')
-                    ->error($e);
+                $this->error($e);
+                $this->error(print_r($external, true));
             }
 
             $this->done($external);
@@ -61,5 +60,12 @@ class Sync
             $this->progress = $progress;
             $this->progress->setMaxSteps($this->api->count());
         }
+    }
+
+    protected function error($e)
+    {
+        ObjectManager::getInstance()
+            ->get('\Psr\Log\LoggerInterface')
+            ->error($e);
     }
 }
