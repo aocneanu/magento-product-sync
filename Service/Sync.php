@@ -4,6 +4,8 @@ namespace LaravelEnso\MagentoProductSync\Service;
 
 use LaravelEnso\MagentoProductSync\Model\Directors\Product as Director;
 use LaravelEnso\MagentoProductSync\Repositories\ProductRepository;
+use Magento\Framework\App\ObjectManager;
+use Throwable;
 
 class Sync
 {
@@ -24,9 +26,15 @@ class Sync
         $this->repository->loadBySkues($this->api->keys());
 
         foreach ($this->api->updated() + $this->api->created() as $external) {
-            (new Director($external, $this->repository->getOrNew($external['sku'])))
-                ->make()
-                ->save();
+            try {
+                (new Director($external, $this->repository->getOrNew($external['sku'])))
+                    ->make()
+                    ->save();
+            } catch (Throwable $e) {
+                ObjectManager::getInstance()
+                    ->get('\Psr\Log\LoggerInterface')
+                    ->error($e);
+            }
 
             $this->done($external);
         }
