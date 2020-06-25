@@ -40,8 +40,10 @@ class Product
 
     private function image()
     {
-        (new Image($this->instance, $this->external['image']))
-            ->addImageToProduct();
+        if ($this->external['image']) {
+            (new Image($this->instance, $this->external['image']))
+                ->addImageToProduct();
+        }
     }
 
     private function formatPrice()
