@@ -38,6 +38,13 @@ class Product
         return $this->instance;
     }
 
+    public function sync()
+    {
+        $this->price()->quantity();
+
+        return $this->instance;
+    }
+
     private function image()
     {
         if ($this->external['image']) {
