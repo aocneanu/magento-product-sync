@@ -25,23 +25,9 @@ class Sync
     {
         $this->repository->loadBySkues($this->api->keys());
 
-        foreach ($this->api->updated() + $this->api->created() as $external) {
-            try {
-                (new Director($external, $this->repository->getOrNew($external['sku'])))
-                    ->make()
-                    ->save();
-            } catch (Throwable $e) {
-                $this->error($e);
-                $this->error(print_r($external, true));
-            }
-
-            $this->done($external);
-        }
-
-        foreach ($this->api->removed() as $external) {
-            $this->repository->delete($external['sku']);
-            $this->done($external);
-        }
+        $this->create()
+            ->update()
+            ->delete();
     }
 
     protected function done($external)
@@ -67,5 +53,51 @@ class Sync
         ObjectManager::getInstance()
             ->get('\Psr\Log\LoggerInterface')
             ->error($e);
+    }
+
+
+    private function create(): self
+    {
+        foreach ($this->api->created() as $external) {
+            try {
+                (new Director($external, $this->repository->getOrNew($external['sku'])))
+                    ->make()
+                    ->save();
+            } catch (Throwable $e) {
+                $this->error($e);
+                $this->error(print_r($external, true));
+            }
+
+            $this->done($external);
+        }
+
+        return $this;
+    }
+
+
+    private function update(): self
+    {
+        foreach ($this->api->updated() as $external) {
+            try {
+                (new Director($external, $this->repository->getOrNew($external['sku'])))
+                    ->sync()
+                    ->save();
+            } catch (Throwable $e) {
+                $this->error($e);
+                $this->error(print_r($external, true));
+            }
+
+            $this->done($external);
+        }
+
+        return $this;
+    }
+
+    private function delete(): void
+    {
+        foreach ($this->api->removed() as $external) {
+            $this->repository->delete($external['sku']);
+            $this->done($external);
+        }
     }
 }
